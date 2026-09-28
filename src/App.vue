@@ -1,5 +1,16 @@
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
+import ProductCard from "./components/ProductCard.vue";
+import SearchBar from "./components/SearchBar.vue";
+import CartSummary from "./components/CartSummary.vue";
+
+const cart = ref([]);
+
+function addToCart(id) {
+    if (!cart.value.includes(id)) {
+        cart.value.push(id);
+    }
+}
 
 const count = ref(0);
 const name = ref("");
@@ -53,6 +64,19 @@ const filteredProducts = computed(function() {
             .includes(searchQuery.value.toLowerCase());
     });
 });
+
+const cartProducts = computed(function() {
+    return products.value.filter(function(product) {
+        return cart.value.includes(product.id);
+    });
+});
+
+onMounted(function() {
+    console.log(
+        "Каталог загружен, товаров:",
+        products.value.length
+    );
+});
 </script>
 
 <template>
@@ -66,24 +90,35 @@ const filteredProducts = computed(function() {
 
         <h2>Имя</h2>
 
-        <input v-model="name" placeholder="Введите имя">
+        <input
+            v-model="name"
+            placeholder="Введите имя"
+        >
 
-        <p v-if="name">Привет, {{ name }}!</p>
+        <p v-if="name">
+            Привет, {{ name }}!
+        </p>
 
         <h2>Товары</h2>
 
-        <input
-            v-model="searchQuery"
-            placeholder="Поиск по названию"
-        >
+        <SearchBar
+            :modelValue="searchQuery"
+            @search="searchQuery = $event"
+        />
 
-        <div v-for="product in filteredProducts" :key="product.id">
-            <h3>{{ product.name }}</h3>
+        <ProductCard
+            v-for="product in filteredProducts"
+            :key="product.id"
+            :id="product.id"
+            :name="product.name"
+            :price="product.price"
+            :inStock="product.inStock"
+            :inCart="cart.includes(product.id)"
+            @add-to-cart="addToCart"
+        />
 
-            <p>Цена: {{ product.price }} ₽</p>
-
-            <p v-if="product.inStock">В наличии</p>
-            <p v-else>Нет в наличии</p>
-        </div>
+        <CartSummary
+            :cartProducts="cartProducts"
+        />
     </div>
 </template>
