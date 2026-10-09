@@ -12,14 +12,17 @@ const emit = defineEmits(["add-to-cart"])
 
 <template>
     <div class="product-card">
-        <h3>{{ name }}</h3>
+        <RouterLink :to="'/product/' + id">
+            <h3>{{ name }}</h3>
+        </RouterLink>
+
         <p>Цена: {{ price }} ₽</p>
 
         <p v-if="inStock">В наличии</p>
         <p v-else>Нет в наличии</p>
 
         <button
-            @click="emit('add-to-cart', id)"
+            @click.stop="emit('add-to-cart', id)"
             :disabled="inCart"
         >
             {{ inCart ? "В корзине" : "В корзину" }}
