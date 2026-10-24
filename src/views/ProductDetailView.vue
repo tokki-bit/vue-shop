@@ -11,25 +11,39 @@ const error = ref(null);
 
 onMounted(async function () {
     try {
-        const id = route.params.id;
+        const id = Number(route.params.id);
 
         const response = await fetch(
-            `https://fakestoreapi.com/products/${id}`
+            "http://pentina.vyatgeo.ru/lab24/api/products.php"
         );
 
         if (!response.ok) {
-            throw new Error("Не удалось загрузить товар");
+            throw new Error("Не удалось загрузить товары");
         }
 
         const data = await response.json();
 
-        if (!data || !data.id) {
+        if (!Array.isArray(data.items)) {
+            throw new Error("Неверный формат ответа сервера");
+        }
+
+        const foundProduct = data.items.find(function (item) {
+            return Number(item.id) === id;
+        });
+
+        if (!foundProduct) {
             throw new Error("Товар не найден");
         }
 
-        product.value = data;
+        product.value = {
+            id: Number(foundProduct.id),
+            name: foundProduct.name,
+            price: Number(foundProduct.price),
+            inStock: Number(foundProduct.in_stock) === 1,
+            categoryId: Number(foundProduct.category_id)
+        };
     } catch (err) {
-        error.value = "Не удалось загрузить товар. Попробуйте позже.";
+        error.value = err.message || "Не удалось загрузить товар. Попробуйте позже.";
     } finally {
         loading.value = false;
     }
@@ -51,20 +65,17 @@ function goBack() {
         </p>
 
         <section v-else-if="product" class="product-info">
-            <h1>{{ product.title }}</h1>
-
-            <img
-                :src="product.image"
-                :alt="product.title"
-                class="product-image"
-            >
-
-            <p class="product-description">
-                {{ product.description }}
-            </p>
+            <h1>{{ product.name }}</h1>
 
             <p class="product-price">
-                Цена: {{ product.price }} $
+                Цена: {{ product.price }} ₽
+            </p>
+
+            <p v-if="product.inStock">
+                В наличии
+            </p>
+            <p v-else>
+                Нет в наличии
             </p>
 
             <button @click="goBack">
