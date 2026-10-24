@@ -33,20 +33,26 @@ const cartProducts = computed(function() {
 
 onMounted(async function() {
     try {
-        const response = await fetch("https://fakestoreapi.com/products");
+        const response = await fetch(
+            "http://pentina.vyatgeo.ru/lab24/api/products.php"
+        );
 
         if (!response.ok) {
-            throw new Error("Ошибка загрузки данных");
+            throw new Error("Ошибка загрузки товаров: " + response.status);
         }
 
         const data = await response.json();
 
-        products.value = data.map(function(product) {
+        if (!Array.isArray(data.items)) {
+            throw new Error("Сервер вернул данные в неверном формате");
+        }
+
+        products.value = data.items.map(function(product) {
             return {
-                id: product.id,
-                name: product.title,
-                price: product.price,
-                inStock: true
+                id: Number(product.id),
+                name: product.name,
+                price: Number(product.price),
+                inStock: Number(product.in_stock) === 1
             };
         });
     } catch (err) {
